@@ -30,6 +30,11 @@ Eth Address: 0xDCA88f66CEc8972D23DE7d5e69c40E087C92132f
 
 - Install [Twurl](https://github.com/twitter/twurl) and, using your Twitter Developer consumer key & secret, generate the access token & access secret
 
+twurl authorize --consumer-key YOUR_CONSUMER_KEY \
+ --consumer-secret YOUR_CONSUMER_SECRET
+
+- Go to `vim ~/.twurlrc`, copy your `token` to `ACCESS_TOKEN_KEY`, `secret` to `ACCESS_TOKEN_SECRET`
+
 In the Settings section of your Heroku app you'll see a Config Vars section. Add the following config vars:
 
 - **CONSUMER_KEY** - Your Twitter Developer App's Consumer Key
