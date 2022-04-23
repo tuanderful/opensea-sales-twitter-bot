@@ -5,6 +5,11 @@ const { ethers } = require('ethers');
 const tweet = require('./tweet');
 const cache = require('./cache');
 
+const { saveEvent, updateLatestSales } = require('./firestore');
+
+const OPENSEA_API_INTERVAL = 90000;
+const DELAY_BETWEEN_API_CALLS = 45000;
+
 // Format tweet text
 function formatAndSendTweet(event) {
     // Handle both individual items + bundle sales
@@ -66,14 +71,71 @@ setInterval(() => {
 
         console.log(`${events.length} sales since the last one...`);
 
+        // Construct a map of all the sales, so we can just make 1 write
+        const salesUpdates = {};
+
         _.each(sortedEvents, (event) => {
             const created = _.get(event, 'created_date');
 
             cache.set('lastSaleTime', moment(created).unix());
 
-            return formatAndSendTweet(event);
+            // Format and send tweet
+            formatAndSendTweet(event);
+
+            // Save to firebase
+            saveEvent(event);
+
+            // Add the event to our map
+            const tokenId = _.get(event, ['asset', 'token_id']);
+            salesUpdates[tokenId] = created;
         });
+
+        // Write the map to Firebase
+        updateLatestSales(salesUpdates);
     }).catch((error) => {
         console.error(error);
     });
-}, 90000);
+}, OPENSEA_API_INTERVAL);
+
+
+
+setTimeout(() => {
+  const lastTransferTime = cache.get('lastTransferTime', null) || moment().startOf('minute').subtract(89, "seconds").unix();
+
+  console.log(`Last transfer (in seconds since Unix epoch): ${cache.get('lastTransferTime', null)}`);
+
+  setInterval(() => {
+    axios.get('https://api.opensea.io/api/v1/events', {
+      headers: {
+        'X-API-KEY': process.env.X_API_KEY
+      },
+      params: {
+        collection_slug: process.env.OPENSEA_COLLECTION_SLUG,
+        event_type: 'transfer',
+        occurred_after: lastTransferTime,
+        only_opensea: 'false',
+      }
+    }).then((response) => {
+      const events = _.get(response, ['data', 'asset_events']);
+
+      const sortedEvents = _.sortBy(events, function(event) {
+          const created = _.get(event, 'created_date');
+
+          return new Date(created);
+      })
+
+      console.log(`${events.length} transfers since the last one...`);
+
+      _.each(sortedEvents, (event) => {
+          const created = _.get(event, 'created_date');
+
+          cache.set('lastTransferTime', moment(created).unix());
+
+          // Save to firebase
+          saveEvent(event);
+      });
+    }).catch((error) => {
+        console.error(error);
+    });
+  }, OPENSEA_API_INTERVAL);
+}, DELAY_BETWEEN_API_CALLS);

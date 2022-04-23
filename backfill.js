@@ -45,18 +45,14 @@ let allEvents = [];
 
 // // Poll OpenSea every 60 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
 const intervalId = setInterval(() => {
-    const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('hour').subtract(30, "minutes").unix();
-
-    console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
-
     axios.get('https://api.opensea.io/api/v1/events', {
         headers: {
             'X-API-KEY': process.env.X_API_KEY
         },
         params: {
             collection_slug: process.env.OPENSEA_COLLECTION_SLUG,
-            event_type: 'successful',
-            occurred_after: 1650301479,
+            event_type: 'successful', // or 'transfer'
+            occurred_after: 1650464679,
             only_opensea: 'false',
             // For pagination, to intialize the feed
             cursor,
@@ -73,7 +69,7 @@ const intervalId = setInterval(() => {
     }).catch((error) => {
         console.error(error);
     });
-}, 2000);
+}, 1000);
 
 
 let sortedEvents = [];
@@ -96,6 +92,5 @@ setTimeout(() => {
     if (i >=sortedUniqueEvents.length) {
       clearInterval(tweetInterval);
     }
-  }, 4000)
-
-}, 30000)
+  }, 3000)
+}, 10000)
