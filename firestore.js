@@ -93,12 +93,12 @@ function saveEvent(event) {
   }
 }
 
-function updateLatestSales(salesUpdates) {
+async function updateLatestSales(salesUpdates) {
   try {
-    const latestSales = db.collection('latestEvents').doc('sales').get();
+    const latestSales = await db.collection('latestEvents').doc('sales').get();
 
     db.collection('latestEvents').doc('sales').set({
-      ...latestSales,
+      ...latestSales.data(),
       ...salesUpdates,
     });
   } catch (firebaseError) {
