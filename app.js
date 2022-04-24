@@ -46,9 +46,12 @@ function formatAndSendTweet(event) {
 
 // Poll OpenSea every 90 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
 setInterval(() => {
-    const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(89, "seconds").unix();
+    const lastSaleTime = cache.get(
+      'lastSaleTime',
+      moment().startOf('minute').subtract(89, "seconds").unix()
+    );
 
-    console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
+    console.log(`Last sale (in seconds since Unix epoch): ${lastSaleTime}`);
 
     axios.get('https://api.opensea.io/api/v1/events', {
         headers: {
@@ -102,9 +105,9 @@ setInterval(() => {
 setTimeout(() => {
 
   setInterval(() => {
-    const lastTransferTime = cache.get('lastTransferTime', null) || moment().startOf('minute').subtract(89, "seconds").unix();
+    const lastTransferTime = cache.get('lastTransferTime', moment().startOf('minute').subtract(89, "seconds").unix());
 
-    console.log(`Last transfer (in seconds since Unix epoch): ${cache.get('lastTransferTime', null)}`);
+    console.log(`Last transfer (in seconds since Unix epoch): ${lastTransferTime}`);
     axios.get('https://api.opensea.io/api/v1/events', {
       headers: {
         'X-API-KEY': process.env.X_API_KEY
